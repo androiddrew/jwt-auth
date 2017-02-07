@@ -125,8 +125,8 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(response['status'] == 'failure')
-            self.assertTrue(response['message'] == 'Password provided was incorrect.')
+            self.assertTrue(data['status'] == 'failure')
+            self.assertTrue(data['message'] == 'Password provided was incorrect.')
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 401)
 

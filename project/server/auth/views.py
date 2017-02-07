@@ -57,7 +57,14 @@ class LoginAPI(MethodView):
             user = User.query.filter_by(
                 email=post_data.get('email')
             ).first()
-            if user and bcrypt.check_password_hash(
+            if not user:
+                responseObject = {
+                    'status': 'failure',
+                    'message': 'User does not exist.'
+                }
+                return make_response(jsonify(responseObject)), 404
+
+            if bcrypt.check_password_hash(
                     user.password, post_data.get('password')):
                 auth_token = User.encode_auth_token(user.id)
                 if auth_token:
@@ -70,9 +77,9 @@ class LoginAPI(MethodView):
             else:
                 responseObject = {
                     'status': 'failure',
-                    'message': 'User does not exist.'
+                    'message': 'Password provided was incorrect.'
                 }
-                return make_response(jsonify(responseObject)), 404
+                return make_response(jsonify(responseObject)), 401
 
         except Exception as e:
             print(e) # Want to make this a logging statement
