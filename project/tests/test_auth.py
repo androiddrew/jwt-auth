@@ -130,5 +130,29 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 401)
 
+    def test_user_status(self):
+        with self.client:
+            register_response = self.client.post(
+                '/auth/register',
+                data=json.dumps(dict(
+                    email='joe@gmail.com',
+                    password='123456'
+                )),
+                content_type='application/json'
+            )
+            response = self.client.get(
+                '/auth/status',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        register_response.data.decode()
+                    )['auth_token']
+                ))
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['data']['email'] == 'joe@gmail.com')
+            self.assertTrue(data['data']['admin'] is 'true' or 'false')
+            self.assertEqual(response.status_code, 200)
+
+
 if __name__ == "__main__":
     unittest.main()
