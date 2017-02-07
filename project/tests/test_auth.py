@@ -99,5 +99,36 @@ class TestAuthBlueprint(BaseTestCase):
         self.assertTrue(response.content_type == 'application/json')
         self.assertEqual(response.status_code, 404)
 
+    def test_user_registered_but_wrong_password(self):
+        with self.client:
+            register_response = self.client.post(
+                '/auth/register',
+                data=json.dumps(dict(
+                    email='joe@gmail.com',
+                    password='123456'
+                )),
+                content_type='application/json'
+            )
+            register_data = json.loads(register_response.data.decode())
+            self.assertTrue(register_data['status'] == 'success')
+            self.assertTrue(register_data['message'] == 'Successfully registered.')
+            self.assertTrue(register_data['auth_token'])
+            self.assertTrue(register_response.content_type == 'application/json')
+            self.assertEqual(register_response.status_code, 201)
+            # registered user login
+            response = self.client.post(
+                '/auth/login',
+                data=json.dumps(dict(
+                    email='joe@gmail.com',
+                    password='test'
+                )),
+                content_type='application/json'
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(response['status'] == 'failure')
+            self.assertTrue(response['message'] == 'Password provided was incorrect.')
+            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(response.status_code, 401)
+
 if __name__ == "__main__":
     unittest.main()
