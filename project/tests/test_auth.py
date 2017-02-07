@@ -131,6 +131,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 401)
 
     def test_user_status(self):
+        """Test for user status"""
         with self.client:
             register_response = self.client.post(
                 '/auth/register',
