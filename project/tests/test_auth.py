@@ -26,7 +26,6 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 201)
 
-
     def test_registered_with_already_registered_user(self):
         """Tests that the user registration resource returns 202"""
         user = User(
@@ -50,6 +49,55 @@ class TestAuthBlueprint(BaseTestCase):
             )
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 202)
+
+    def test_registered_user_login(self):
+        """Test for login of registered user"""
+        with self.client:
+            register_response = self.client.post(
+                '/auth/register',
+                data=json.dumps(dict(
+                    email='joe@gmail.com',
+                    password='123456'
+                )),
+                content_type='application/json'
+            )
+            register_data = json.loads(register_response.data.decode())
+            self.assertTrue(register_data['status'] == 'success')
+            self.assertTrue(register_data['message'] == 'Successfully registered.')
+            self.assertTrue(register_data['auth_token'])
+            self.assertTrue(register_response.content_type == 'application/json')
+            self.assertEqual(register_response.status_code, 201)
+            # registered user login
+            response = self.client.post(
+                '/auth/login',
+                data=json.dumps(dict(
+                    email='joe@gmail.com',
+                    password='123456'
+                )),
+                content_type='application/json'
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['message'] == 'Successfully logged in.')
+            self.assertTrue(data['auth_token'])
+            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(response.status_code, 200)
+
+    def test_non_registered_user_login(self):
+        """Test for login of a non-registered user"""
+        response = self.client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                email='notjoe@gmail.com',
+                password='123456'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+        self.assertTrue(data['status'] == 'failure')
+        self.assertTrue(data['message'] == 'User does not exist.')
+        self.assertTrue(response.content_type == 'application/json')
+        self.assertEqual(response.status_code, 404)
 
 if __name__ == "__main__":
     unittest.main()
