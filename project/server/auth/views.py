@@ -89,10 +89,49 @@ class LoginAPI(MethodView):
             }
             return make_response(jsonify(responseObject)), 500
 
+
+class UserAPI(MethodView):
+    """User Resource"""
+
+    def get(self):
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            auth_token = auth_header.split(" ")[1]
+        else:
+            auth_token=''
+        if auth_token:
+            resp = User.decode_auth_token(auth_token)
+            if not isinstance(resp, str):
+                user = User.query.filter_by(id=resp).first()
+                responseObject = {
+                    'status': 'success',
+                    'data':{
+                        'user_id': user.id,
+                        'email': user.email,
+                        'admin': user.admin,
+                        'registered_on': user.registered_on
+                    }
+                }
+                return make_response(jsonify(responseObject)), 200
+            responseObject = {
+                'status': 'failure',
+                'message': resp
+            }
+            return make_response(jsonify(responseObject)), 401
+        else:
+            responseObject = {
+                'status': 'failure',
+                'message': 'Valid auth token required'
+            }
+            return make_response(jsonify(responseObject)), 401
+
+
 # Define API resources
 
 registration_view = RegisterAPI.as_view('register_api')
 login_view = LoginAPI.as_view('login_api')
+user_view = UserAPI.as_view('user_api')
+
 
 auth_blueprint.add_url_rule(
     '/auth/register',
@@ -104,4 +143,10 @@ auth_blueprint.add_url_rule(
     '/auth/login',
     view_func=login_view,
     methods=['POST']
+)
+
+auth_blueprint.add_url_rule(
+    '/auth/status',
+    view_func=user_view,
+    methods=['GET']
 )
